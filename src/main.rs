@@ -1,5 +1,4 @@
 mod counters;
-use crate::counters::*;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "ssr")] {
@@ -7,6 +6,7 @@ cfg_if::cfg_if! {
         use actix_web::*;
         use leptos::*;
         use leptos_actix::{generate_route_list, LeptosRoutes};
+        use crate::counters::Counters;
 
         #[get("/api/events")]
         async fn counter_events() -> impl Responder {
@@ -57,6 +57,7 @@ cfg_if::cfg_if! {
         }
     }  else {
         fn main() {
+            use crate::counters::Counters;
             console_error_panic_hook::set_once();
             leptos::mount_to_body(Counters);
         }

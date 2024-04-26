@@ -5,7 +5,6 @@ use leptos_router::*;
 #[cfg(feature = "ssr")]
 pub mod ssr_imports {
     pub use broadcaster::BroadcastChannel;
-    pub use once_cell::sync::OnceCell;
     pub use std::sync::atomic::{AtomicI32, Ordering};
 
     pub static COUNT: AtomicI32 = AtomicI32::new(0);
@@ -29,7 +28,7 @@ pub async fn adjust_server_count(delta: i32, msg: String) -> Result<i32, ServerF
     let new = COUNT.load(Ordering::Relaxed) + delta;
     COUNT.store(new, Ordering::Relaxed);
     _ = COUNT_CHANNEL.send(&new).await;
-    println!("message = {:?}", msg);
+    println!("message = {msg}");
     Ok(new)
 }
 
@@ -41,14 +40,26 @@ pub async fn clear_server_count() -> Result<i32, ServerFnError> {
     _ = COUNT_CHANNEL.send(&0).await;
     Ok(0)
 }
+
 #[component]
 pub fn Counters() -> impl IntoView {
     provide_meta_context();
+
+    let subtitle = if cfg!(feature = "ssr") {
+        "SSR only"
+    } else if cfg!(feature = "hydrate") {
+        "Hydrated SSR"
+    } else {
+        "CSR with proxy for server fns"
+    };
+
     view! {
         <Router>
             <header>
                 <h1>Trunk and Cargo Leptos</h1>
             </header>
+            <div style="font-size: 2rem; font-weight: bold;">{subtitle}</div>
+            
             <Link rel="shortcut icon" type_="image/ico" href="/favicon.ico"/>
             <main>
                 <Routes>
@@ -77,18 +88,16 @@ pub fn FormCounter() -> impl IntoView {
 
     view! {
         <div>
-            <h2>"Form Counter"</h2>
+            <h2>Counter</h2>
             <p>
-                "This counter uses forms to set the value on the server. When progressively enhanced, it should behave identically to the “Simple Counter.”"
+                This counter uses forms to set the value on the server.
+                When run with cargo leptos, the form will be progressively enhanced and work both with and without javascript enabled.
+                When run with trunk (still requires running cargo leptos in the background), the app will only use client-side rendering, but still send serverfn requests to the server. This allows server actions to work in all rendering modes.
             </p>
             <div>
-                // calling a server function is the same as POSTing to its API URL
-                // so we can just do that with a form and button
                 <ActionForm action=clear>
                     <input type="submit" value="Clear"/>
                 </ActionForm>
-                // We can submit named arguments to the server functions
-                // by including them as input values with the same name
                 <ActionForm action=adjust>
                     <input type="hidden" name="delta" value="-1"/>
                     <input type="hidden" name="msg" value="form value down"/>
