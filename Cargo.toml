@@ -10,6 +10,10 @@ crate-type = ["cdylib", "rlib"]
 codegen-units = 1
 lto = true
 
+[profile.wasm-release]
+inherits = "release"
+opt-level = "z"
+
 [dependencies]
 actix-files = { version = "0.6", optional = true }
 actix-web = { version = "4", optional = true, features = ["macros"] }
@@ -58,7 +62,7 @@ denylist = ["actix-files", "actix-web", "leptos_actix"]
 skip_feature_sets = [["csr", "ssr"], ["csr", "hydrate"], ["ssr", "hydrate"]]
 
 [package.metadata.leptos]
-output-name = "counter-isomorphic"
+output-name = "counter-isomorphic-foo"
 env = "DEV"
 watch = false
 bin-features = ["ssr"]
